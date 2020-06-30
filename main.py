@@ -73,8 +73,8 @@ def ig():
     page = requests.get(
         f'https://imginn.com/{username}/').text.encode('utf-8')
     soup = BeautifulSoup(page, "html.parser")
-    images = soup.findAll("div", {"class": "img"})[1:]
-    if(len(images) == 0):
+    items = soup.findAll("div", {"class": "item"})
+    if(len(items) == 0):
         print('can\'t get photo')
         response = app.response_class(
             status=400,
@@ -82,11 +82,14 @@ def ig():
         )
 
     else:
-        image = random.choice(images)
-        img = image.find("img")
+        item = random.choice(items)
+        is_video = len(item.findAll("i")) != 0
+        caption = item.find('img')['alt']
+        src = item.find("a", {"class": "download"})['href']
         ig_response = {
-            "caption": img['alt'],
-            "photo": img['data-src']
+            "caption": caption,
+            "src": src,
+            "video": is_video
         }
         response = app.response_class(
             response=json.dumps(ig_response),
