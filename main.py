@@ -101,28 +101,51 @@ def ig():
 
 @app.route("/igp")
 def igp():
+    # username = request.args.get('username')
+    # page = requests.get(
+    #     f'https://imginn.com/{username}/').text.encode('utf-8')
+    # soup = BeautifulSoup(page, "html.parser")
+    # image = soup.find("div", {"class": "img"})
+    # if(image == None):
+    #     response = app.response_class(
+    #         status=400,
+    #         mimetype='application/json'
+    #     )
+    #     return response
+    # else:
+    #     img = image.find("img")
+    #     igp_response = {
+    #         "src": img['src'],
+    #     }
+    #     response = app.response_class(
+    #         response=json.dumps(igp_response),
+    #         status=200,
+    #         mimetype='application/json'
+    #     )
+    #     return response
     username = request.args.get('username')
-    page = requests.get(
-        f'https://imginn.com/{username}/').text.encode('utf-8')
+    data = f'username={username}&submit=View+DP'
+    page = requests.post(
+        f'https://fullinstadp.com/index.php', data=data).text.encode('utf-8')
     soup = BeautifulSoup(page, "html.parser")
-    image = soup.find("div", {"class": "img"})
-    if(image == None):
-        response = app.response_class(
-            status=400,
-            mimetype='application/json'
-        )
-        return response
-    else:
-        img = image.find("img")
-        igp_response = {
-            "src": img['src'],
-        }
-        response = app.response_class(
-            response=json.dumps(igp_response),
-            status=200,
-            mimetype='application/json'
-        )
-        return response
+    image = soup.findAll("img", {"class": "img-responsive"})
+    print(soup)
+    # if(image == None):
+    #     response = app.response_class(
+    #         status=400,
+    #         mimetype='application/json'
+    #     )
+    #     return response
+    # else:
+    #     igp_response = {
+    #         "src": img['src'],
+    #     }
+    #     response = app.response_class(
+    #         response=json.dumps(igp_response),
+    #         status=200,
+    #         mimetype='application/json'
+    #     )
+    #     return response
 
 
 if __name__ == "__main__":

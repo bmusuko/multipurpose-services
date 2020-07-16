@@ -12,5 +12,5 @@ Simple covid 19 scrapper from kompas.id<br><br>
 
 
 Test :<br>
-http://bmusuko.ninja:8081 <br>
-http://bmusuko.ninja:8081/detail
+https://api.bmusuko.ninja <br>
+https://api.bmusuko.ninja/detail
