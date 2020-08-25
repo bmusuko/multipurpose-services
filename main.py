@@ -2,6 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 from flask import Flask, json, request
 import random
+from dotenv import load_dotenv
+import os
+import instaloader
+load_dotenv()
+
+USER = os.getenv("USERNAME")
+PASSWORD = os.getenv("PASSWORD")
+MAX_POST = 20
+L = instaloader.Instaloader()
+
 app = Flask(__name__)
 
 
@@ -69,84 +79,90 @@ def detail():
 
 @app.route("/ig")
 def ig():
-    username = request.args.get('username')
-    page = requests.get(
-        f'https://imginn.com/{username}/').text.encode('utf-8')
-    soup = BeautifulSoup(page, "html.parser")
-    items = soup.findAll("div", {"class": "item"})
-    if(len(items) == 0):
-        print('can\'t get photo')
+    try:
+        username = request.args.get('username')
+    except instaloader.exceptions.ProfileNotExistsException:
+        response = app.response_class(
+            status=404,
+            mimetype='application/json'
+        )
+        return response
+
+    profile = instaloader.Profile.from_username(L.context, username)
+
+    if(profile.is_private):
         response = app.response_class(
             status=400,
             mimetype='application/json'
         )
+        return response
 
-    else:
-        item = random.choice(items)
-        is_video = len(item.findAll("i")) != 0
-        caption = item.find('img')['alt']
-        src = item.find("a", {"class": "download"})['href']
-        ig_response = {
-            "caption": caption,
-            "src": src,
-            "video": is_video
-        }
+    posts = profile.get_posts()
+    count = posts.count
+    if(count == 0):
         response = app.response_class(
-            response=json.dumps(ig_response),
-            status=200,
+            status=400,
             mimetype='application/json'
         )
+        return response
+
+    count = min(MAX_POST,count)
+    i = 0
+    for post in posts:
+        i += 1
+        if(i == count):
+            is_video =  post.is_video
+            if(is_video):
+                src = post.video_url
+            else:
+                src = post.url
+            caption = post.caption
+
+
+    ig_response = {
+        "caption": caption,
+        "src": src,
+        "video": is_video
+    }
+    response = app.response_class(
+        response=json.dumps(ig_response),
+        status=200,
+        mimetype='application/json'
+    )
+
     return response
 
 
 @app.route("/igp")
 def igp():
-    # username = request.args.get('username')
-    # page = requests.get(
-    #     f'https://imginn.com/{username}/').text.encode('utf-8')
-    # soup = BeautifulSoup(page, "html.parser")
-    # image = soup.find("div", {"class": "img"})
-    # if(image == None):
-    #     response = app.response_class(
-    #         status=400,
-    #         mimetype='application/json'
-    #     )
-    #     return response
-    # else:
-    #     img = image.find("img")
-    #     igp_response = {
-    #         "src": img['src'],
-    #     }
-    #     response = app.response_class(
-    #         response=json.dumps(igp_response),
-    #         status=200,
-    #         mimetype='application/json'
-    #     )
-    #     return response
-    username = request.args.get('username')
-    data = f'username={username}&submit=View+DP'
-    page = requests.post(
-        f'https://fullinstadp.com/index.php', data=data).text.encode('utf-8')
-    soup = BeautifulSoup(page, "html.parser")
-    image = soup.findAll("img", {"class": "img-responsive"})
-    print(soup)
-    # if(image == None):
-    #     response = app.response_class(
-    #         status=400,
-    #         mimetype='application/json'
-    #     )
-    #     return response
-    # else:
-    #     igp_response = {
-    #         "src": img['src'],
-    #     }
-    #     response = app.response_class(
-    #         response=json.dumps(igp_response),
-    #         status=200,
-    #         mimetype='application/json'
-    #     )
-    #     return response
+    try:
+        username = request.args.get('username')
+    except instaloader.exceptions.ProfileNotExistsException:
+        response = app.response_class(
+            status=404,
+            mimetype='application/json'
+        )
+        return response
+        
+    profile = instaloader.Profile.from_username(L.context, username)
+
+    igp_response = {
+        "src": profile.profile_pic_url,
+    }
+    response = app.response_class(
+        response=json.dumps(igp_response),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 if __name__ == "__main__":
+    try:
+        L.load_session_from_file(USER) # (load session created w/
+    except FileNotFoundError:
+        L.login(USER, PASSWORD)
+        L.save_session_to_file()
+    except:
+        print("sumting wong")
     app.run(host='0.0.0.0')
