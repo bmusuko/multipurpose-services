@@ -89,7 +89,7 @@ def ig():
         return response
 
     profile = instaloader.Profile.from_username(L.context, username)
-
+    print('get profile')
     if(profile.is_private):
         response = app.response_class(
             status=400,
@@ -98,6 +98,8 @@ def ig():
         return response
 
     posts = profile.get_posts()
+    print('get post')
+
     count = posts.count
     if(count == 0):
         response = app.response_class(
@@ -107,9 +109,12 @@ def ig():
         return response
 
     count = min(MAX_POST,count)
+    count = random.randint(1,count)
     i = 0
     for post in posts:
         i += 1
+        print(f'get post - {i}')
+        
         if(i == count):
             is_video =  post.is_video
             if(is_video):
@@ -117,6 +122,7 @@ def ig():
             else:
                 src = post.url
             caption = post.caption
+            break
 
 
     ig_response = {
