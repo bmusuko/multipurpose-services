@@ -2,5 +2,6 @@ Flask==1.1.2
 requests==2.23.0
 bs4==0.0.1
 markupsafe
-python-dotenv
-instaloader
+python-dotenv==0.14.0
+instaloader==4.5.2
+gunicorn==20.0.4
