@@ -3,12 +3,12 @@ from bs4 import BeautifulSoup
 from flask import Flask, json, request
 import random
 from dotenv import load_dotenv
-import os
+# import os
 import instaloader
-load_dotenv()
+# load_dotenv()
 
-USER = os.getenv("USERNAME")
-PASSWORD = os.getenv("PASSWORD")
+# USER = os.getenv("USERNAME")
+# PASSWORD = os.getenv("PASSWORD")
 MAX_POST = 20
 L = instaloader.Instaloader()
 
@@ -164,11 +164,11 @@ def igp():
 
 
 if __name__ == "__main__":
-    try:
-        L.load_session_from_file(USER) # (load session created w/
-    except FileNotFoundError:
-        L.login(USER, PASSWORD)
-        L.save_session_to_file()
-    except:
-        print("sumting wong")
+    # try:
+        # L.load_session_from_file(USER) # (load session created w/
+    # except FileNotFoundError:
+        # L.login(USER, PASSWORD)
+        # L.save_session_to_file()
+    # except:
+        # print("sumting wong")
     app.run(host='0.0.0.0')
