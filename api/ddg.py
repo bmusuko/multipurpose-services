@@ -73,7 +73,7 @@ def search(keywords, max_results=None, index=None):
         selected = index
     logger.info(f"Get selected index {selected} {randomIndex} {sizeResult}")
     return (
-        data["results"][selected]["title"].encode("utf-8"),
+        data["results"][selected]["title"],
         data["results"][selected]["image"],
     )
     # print(())
