@@ -3,15 +3,15 @@ from bs4 import BeautifulSoup
 from flask import Flask, json, request
 import random
 from dotenv import load_dotenv
-
-# import os
+import urllib.parse
+import logging
 import instaloader
+from api.ddg import search
 
-# load_dotenv()
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-# USER = os.getenv("USERNAME")
-# PASSWORD = os.getenv("PASSWORD")
-MAX_POST = 20
+MAX_POST = 10
 L = instaloader.Instaloader()
 
 app = Flask(__name__)
@@ -40,6 +40,7 @@ def summary():
         "recovered": sembuh,
         "hospitalized": rawat,
     }
+    logger.info(f"get corona summary {up} {confirm} {meninggal} {sembuh} {rawat}")
     response = app.response_class(
         response=json.dumps(summary_response), status=200, mimetype="application/json"
     )
@@ -68,7 +69,7 @@ def detail():
             "recovered": recovered,
         }
         cities.append(city_detail)
-
+    logger.info(f"get corona detail")
     response = app.response_class(
         response=json.dumps(cities), status=200, mimetype="application/json"
     )
@@ -81,13 +82,13 @@ def ig():
         username = request.args.get("username")
 
         profile = instaloader.Profile.from_username(L.context, username)
-        print("get profile")
+        # print("get profile")
         if profile.is_private:
             response = app.response_class(status=400, mimetype="application/json")
             return response
 
         posts = profile.get_posts()
-        print("get post")
+        # print("get post")
 
         count = posts.count
         if count == 0:
@@ -99,7 +100,7 @@ def ig():
         i = 0
         for post in posts:
             i += 1
-            print(f"get post - {i}")
+            # print(f"get post - {i}")
 
             if i == count:
                 is_video = post.is_video
@@ -109,7 +110,7 @@ def ig():
                     src = post.url
                 caption = post.caption
                 break
-
+        logger.info(f"get ig post {username} {caption} {src}")
         ig_response = {"caption": caption, "src": src, "video": is_video}
         response = app.response_class(
             response=json.dumps(ig_response), status=200, mimetype="application/json"
@@ -131,6 +132,7 @@ def igp():
         igp_response = {
             "src": profile.profile_pic_url,
         }
+        logger.info(f"get ig profile {username}")
         response = app.response_class(
             response=json.dumps(igp_response), status=200, mimetype="application/json"
         )
@@ -140,12 +142,29 @@ def igp():
         return response
 
 
+@app.route("/ddg")
+def ddg():
+    query = request.args.get("search")
+    query = urllib.parse.unquote(query)
+    index = request.args.get("index")
+    if not index is None:
+        try:
+            index = int(index)
+        except:
+            response = app.response_class(status=400, mimetype="application/json")
+            return response
+    title, src = search(keywords=query, index=index)
+    ddg_response = {
+        "title": title,
+        "src": src,
+    }
+    response = app.response_class(
+        response=json.dumps(ddg_response), status=200, mimetype="application/json"
+    )
+
+    return response
+
+
 if __name__ == "__main__":
-    # try:
-    # L.load_session_from_file(USER) # (load session created w/
-    # except FileNotFoundError:
-    # L.login(USER, PASSWORD)
-    # L.save_session_to_file()
-    # except:
-    # print("sumting wong")
+    logger.info("Starting application")
     app.run(host="0.0.0.0")
