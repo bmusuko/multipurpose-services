@@ -80,7 +80,6 @@ def detail():
 def ig():
     try:
         username = request.args.get("username")
-
         profile = instaloader.Profile.from_username(L.context, username)
         # print("get profile")
         if profile.is_private:
@@ -88,8 +87,7 @@ def ig():
             return response
 
         posts = profile.get_posts()
-        # print("get post")
-
+        print("get post")
         count = posts.count
         if count == 0:
             response = app.response_class(status=400, mimetype="application/json")
@@ -98,20 +96,34 @@ def ig():
         count = min(MAX_POST, count)
         count = random.randint(1, count)
         i = 0
+        ret_json = []
         for post in posts:
+            print(post)
             i += 1
             # print(f"get post - {i}")
 
             if i == count:
-                is_video = post.is_video
-                if is_video:
-                    src = post.video_url
-                else:
-                    src = post.url
                 caption = post.caption
+                typename = post.typename
+                if typename == "GraphSidecar":
+                    for sidecard in post.get_sidecar_nodes():
+                        is_video = sidecard.is_video
+                        if is_video:
+                            src = sidecard.video_url
+                        else:
+                            src = sidecard.display_url
+                        print(src)
+                        ret_json.append({"src": src, "video": is_video})
+                else:
+                    is_video = post.is_video
+                    if is_video:
+                        src = post.video_url
+                    else:
+                        src = post.url
+                    ret_json.append({"src": src, "video": is_video})
                 break
-        logger.info(f"get ig post {username} {caption} {src}")
-        ig_response = {"caption": caption, "src": src, "video": is_video}
+        # logger.info(f"get ig post {username} {caption} {src}")
+        ig_response = {"caption": caption, "result": ret_json}
         response = app.response_class(
             response=json.dumps(ig_response), status=200, mimetype="application/json"
         )
