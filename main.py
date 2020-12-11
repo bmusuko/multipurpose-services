@@ -6,13 +6,17 @@ from dotenv import load_dotenv
 import urllib.parse
 import logging
 import instaloader
+from TikTokApi import TikTokApi
 from api.ddg import search
+from api.tiktok import getPost
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 MAX_POST = 10
 L = instaloader.Instaloader()
+
+api = TikTokApi.get_instance(use_selenium=True, use_test_endpoints=True)
 
 app = Flask(__name__)
 
@@ -175,6 +179,28 @@ def ddg():
     )
 
     return response
+
+
+@app.route("/tiktok")
+def tiktok():
+    try:
+        username = request.args.get("username")
+        caption, url = getPost(api, username)
+        if caption == None:
+            response = app.response_class(status=400, mimetype="application/json")
+            return response
+
+        tiktok_response = {"caption": caption, "url": url}
+        logger.info(f"get tiktok post username {username} caption {caption} url {url}")
+        response = app.response_class(
+            response=json.dumps(tiktok_response),
+            status=200,
+            mimetype="application/json",
+        )
+        return response
+    except Exception:
+        response = app.response_class(status=404, mimetype="application/json")
+        return response
 
 
 if __name__ == "__main__":
