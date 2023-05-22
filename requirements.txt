@@ -1,5 +1,5 @@
 Flask==1.1.2
-requests==2.23.0
+requests==2.31.0
 bs4==0.0.1
 markupsafe
 python-dotenv==0.14.0
